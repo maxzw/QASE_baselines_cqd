@@ -12,6 +12,7 @@ import os
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
+from classification import evaluate_with_thresholds, find_val_thresholds
 from models import KGReasoning
 from cqd import CQD
 
@@ -489,8 +490,19 @@ def main(args):
         step = 0
 
     if args.do_test:
-        logging.info('Evaluating on Test Dataset...')
-        test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)
+        # logging.info('Evaluating on Test Dataset...')
+        # test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)
+
+        # --------- Added for thesis baseline ----------
+        logging.info('Finding thresholds on validation dataset...')
+        thresholds, metrics = find_val_thresholds(model, valid_easy_answers, valid_hard_answers, args, valid_dataloader)
+        logging.info(f"Val thresholds: {thresholds}")
+        logging.info(f"Val metrics: {metrics}")
+
+        logging.info('Using found thresholds on test set...')
+        metrics = evaluate_with_thresholds(model, test_easy_answers, test_hard_answers, args, test_dataloader, thresholds)
+        logging.info(f"Test metrics: {metrics}")
+        # --------- Added for thesis baseline ----------
 
     logging.info("Training finished!!")
 
