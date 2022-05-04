@@ -4,7 +4,7 @@
 #SBATCH --cpus-per-task=2
 #SBATCH --gpus=1
 #SBATCH --partition=gpu_shared
-#SBATCH --time=20:00:00
+#SBATCH --time=50:00:00
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=m.j.zwager@student.vu.nl
 #SBATCH --output=job_logs/output_%A.out
@@ -27,4 +27,5 @@ source activate thesis
 srun python main.py --cuda --do_train --do_valid --do_test \
   --data_path data/FB15k-237-betae -n 128 -b 512 -d 800 -g 24 \
   -lr 0.0001 --max_steps 450001 --cpu_num 1 --geo cqd --valid_steps 15000 \
-  --tasks "1p.2p.3p.2i.3i.ip.pi"
+  --tasks "1p.2p.3p.2i.3i.ip.pi" \
+  --checkpoint_path "logs/FB15k-237-betae/1p.2p.3p.2i.3i.ip.pi/vec/g-24.0/2022.05.03-20:14:00/"
