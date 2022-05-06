@@ -198,12 +198,25 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
             'f1': f1
         }
 
+    model_name = None
+    if args.geo == 'vec':
+        model_name = 'GQE'
+    elif args.geo == 'beta':
+        model_name = 'BetaE'
+    elif args.geo == 'box':
+        model_name = 'Q2B'
+    elif args.geo == 'cqd':
+        model_name = 'CQD'
+
     # Save figure
-    plt.title("Structure-wise f1 optimization results")
+    if model_name is not None:
+        plt.title("Structure-wise f1 optimization results for {}".format(model_name))
+    else:
+        plt.title("Structure-wise f1 optimization results")
     plt.xlabel('Distance threshold')
     plt.ylabel('f1-score')
     plt.legend()
-    plt.savefig(args.save_path + "/threshold_search.png", facecolor='w')
+    plt.savefig(args.save_path + "/threshold_search.png", facecolor='w', bbox_inches='tight')
 
     return thresholds, metrics
 
