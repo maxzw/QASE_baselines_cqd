@@ -1,6 +1,7 @@
 logs/
 *__pycache__*
 data/
+opt_data/
 example.sh
 
 *.svg

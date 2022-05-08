@@ -23,7 +23,7 @@ from tensorboardX import SummaryWriter
 
 import pickle
 from collections import defaultdict
-from util import flatten_query, parse_time, set_global_seed, eval_tuple
+from util import flatten_query, parse_time, set_global_seed, eval_tuple, get_emb_uniqueness
 
 query_name_dict = {('e',('r',)): '1p', 
                     ('e', ('r', 'r')): '2p',
@@ -395,12 +395,17 @@ def main(args):
             lr=current_learning_rate
         )
         warm_up_steps = args.max_steps // 2 if args.warm_up_steps is None else args.warm_up_steps
-
+    
+    emb_uniquenesses = {}
     if args.checkpoint_path is not None:
         logging.info('Loading checkpoint %s...' % args.checkpoint_path)
         checkpoint = torch.load(os.path.join(args.checkpoint_path, 'checkpoint'),
                                 map_location=torch.device('cpu') if not args.cuda else None)
         init_step = checkpoint['step']
+        try:
+            emb_uniquenesses = checkpoint['emb_uniquenesses']
+        except KeyError:
+            pass
         model.load_state_dict(checkpoint['model_state_dict'])
 
         if args.do_train:
@@ -442,6 +447,9 @@ def main(args):
                 log = KGReasoning.train_step(model, optimizer, train_path_iterator, args, step)
 
             training_logs.append(log)
+            if (step + 1) % train_path_iterator.samples == 0:
+                epoch = (step + 1) // train_path_iterator.samples
+                emb_uniquenesses.update({(epoch, step): get_emb_uniqueness(model)})
 
             if step >= warm_up_steps:
                 current_learning_rate = current_learning_rate / 5
@@ -456,18 +464,19 @@ def main(args):
                 save_variable_list = {
                     'step': step, 
                     'current_learning_rate': current_learning_rate,
-                    'warm_up_steps': warm_up_steps
+                    'warm_up_steps': warm_up_steps,
+                    'emb_uniquenesses': emb_uniquenesses,
                 }
                 save_model(model, optimizer, save_variable_list, args)
 
-            if step % args.valid_steps == 0 and step > 0:
-                if args.do_valid:
-                    logging.info('Evaluating on Valid Dataset...')
-                    valid_all_metrics = evaluate(model, valid_easy_answers, valid_hard_answers, args, valid_dataloader, query_name_dict, 'Valid', step, writer)
+            # if step % args.valid_steps == 0 and step > 0:
+            #     if args.do_valid:
+            #         logging.info('Evaluating on Valid Dataset...')
+            #         valid_all_metrics = evaluate(model, valid_easy_answers, valid_hard_answers, args, valid_dataloader, query_name_dict, 'Valid', step, writer)
 
-                if args.do_test:
-                    logging.info('Evaluating on Test Dataset...')
-                    test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)
+            #     if args.do_test:
+            #         logging.info('Evaluating on Test Dataset...')
+            #         test_all_metrics = evaluate(model, test_easy_answers, test_hard_answers, args, test_dataloader, query_name_dict, 'Test', step, writer)
                 
             if step % args.log_steps == 0:
                 metrics = {}
@@ -476,6 +485,8 @@ def main(args):
 
                 log_metrics('Training average', step, metrics)
                 training_logs = []
+
+        logging.info(f"Embedding uniquenesses per epoch/step: {emb_uniquenesses}")
 
         save_variable_list = {
             'step': step, 

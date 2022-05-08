@@ -2,6 +2,9 @@ import numpy as np
 import random
 import torch
 import time
+from cqd.base import CQD
+
+from models import KGReasoning
 
 def list2tuple(l):
     return tuple(list2tuple(x) if type(x)==list else x for x in l)
@@ -47,3 +50,18 @@ def flatten_query(queries):
         tmp_queries = list(queries[query_structure])
         all_queries.extend([(query, query_structure) for query in tmp_queries])
     return all_queries
+
+def get_emb_uniqueness(model) -> float:
+    if isinstance(model, KGReasoning):
+        embs = model.entity_embedding.data.clone().detach()
+        bits = (embs > 0).float()
+        return bits.unique(dim=0).size(0) / bits.size(0)
+    elif isinstance(model, CQD):
+        embs1 = model.embeddings[0].weight.data.clone().detach()
+        embs2 = model.embeddings[1].weight.data.clone().detach()
+        bits1 = (embs1 > 0).float()
+        bits2 = (embs2 > 0).float()
+        u1 = bits1.unique(dim=0).size(0) / bits1.size(0)
+        u2 = bits2.unique(dim=0).size(0) / bits2.size(0)
+        return [u1, u2]
+    return None

@@ -91,6 +91,7 @@ class TrainDataset(Dataset):
 
 class SingledirectionalOneShotIterator(object):
     def __init__(self, dataloader):
+        self.samples = len(dataloader)
         self.iterator = self.one_shot_iterator(dataloader)
         self.step = 0
         
