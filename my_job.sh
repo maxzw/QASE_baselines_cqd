@@ -21,7 +21,7 @@ cd ${SCRATCH_DIRECTORY}
 
 # Activate Anaconda work environment for OpenDrift
 source /home/${USER}/.bashrc
-source activate thesis 
+source activate thesis
 
 # Run your code
 srun python main.py --cuda --do_train --do_valid --do_test \
