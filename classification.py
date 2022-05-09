@@ -101,6 +101,7 @@ def find_best_threshold(
     )
 
     if (model_name is not None) and (dataset_name is not None) and (struct_str is not None) and (save_path is not None):
+        # save current optimization metrics (2) if needed
         plt.figure(2, figsize=(10,10))
         x = np.array([step['params']['threshold'] for step in optimizer.res])
         y = np.array([step['target'] for step in optimizer.res])
@@ -113,8 +114,8 @@ def find_best_threshold(
         plt.plot(x, r, '-', label="recall")
         plt.plot(x, p, '-', label="precision")
         plt.legend()
-        plt.xlabel("threshold")
-        plt.ylabel("score")
+        plt.xlabel("Distance threshold")
+        plt.ylabel("Score")
         plt.title(f"{model_name}_{dataset_name}_{struct_str}")
         plt.savefig(f"{save_path}/{model_name}_{dataset_name}_{struct_str}.png", facecolor='w', bbox_inches='tight')
 
@@ -357,10 +358,10 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
     }
 
     metrics['weighted'] = {
-        'accuracy': np.mean([metrics[struct]['accuracy'] * struct_sizes[struct] for struct in metrics]),
-        'precision': np.mean([metrics[struct]['precision'] * struct_sizes[struct] for struct in metrics]),
-        'recall': np.mean([metrics[struct]['recall'] * struct_sizes[struct] for struct in metrics]),
-        'f1': np.mean([metrics[struct]['f1'] * struct_sizes[struct] for struct in metrics])
+        'accuracy': np.mean([metrics[struct]['accuracy'] * struct_sizes[struct] for struct in metrics if struct is not 'macro']),
+        'precision': np.mean([metrics[struct]['precision'] * struct_sizes[struct] for struct in metrics if struct is not 'macro']),
+        'recall': np.mean([metrics[struct]['recall'] * struct_sizes[struct] for struct in metrics if struct is not 'macro']),
+        'f1': np.mean([metrics[struct]['f1'] * struct_sizes[struct] for struct in metrics if struct is not 'macro'])
     }
 
     return metrics
