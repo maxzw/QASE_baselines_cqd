@@ -155,6 +155,7 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
 
     step = 0
     total_steps = len(test_dataloader)
+    early_stop = total_steps // 12
 
     # track queries, distances and answers
     all_query_stuctures = []
@@ -199,6 +200,8 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
 
         if step % 10 == 0:
             logging.info('Gathering predictions of batches... (%d/%d) ' % (step, total_steps))
+        if step > early_stop:
+            break
         step += 1
 
     # IMPORTANT: reset to raw distances
@@ -263,6 +266,7 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
 
     step = 0
     total_steps = len(test_dataloader)
+    early_stop = total_steps // 12
 
     # track queries, distances and answers
     all_query_stuctures = []
@@ -307,6 +311,8 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
 
         if step % 10 == 0:
             logging.info('Gathering predictions of batches... (%d/%d)' % (step, total_steps))
+        if step > early_stop:
+            break
         step += 1
 
     # IMPORTANT: reset to raw distances
