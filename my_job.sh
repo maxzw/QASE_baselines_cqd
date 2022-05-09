@@ -24,7 +24,7 @@ source /home/${USER}/.bashrc
 source activate thesis
 
 # Run your code
-srun python main.py --cuda --do_test \
+srun python main.py --cuda --do_valid --do_test \
   --data_path data/FB15k-237-betae -n 128 -b 512 -d 800 -g 24 \
   -lr 0.0001 --max_steps 450001 --cpu_num 1 --geo vec --valid_steps 15000 \
   --save_checkpoint_steps 5000 --tasks "1p.2p.3p.2i.3i.ip.pi" \
