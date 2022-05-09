@@ -24,8 +24,8 @@ source /home/${USER}/.bashrc
 source activate thesis
 
 # Run your code
-srun python main.py --cuda --do_train --do_valid --do_test \
-  --data_path data/AIFB-gqs -n 128 -b 512 -d 800 -g 24 \
+srun python main.py --cuda --do_test \
+  --data_path data/FB15k-237-betae -n 128 -b 512 -d 800 -g 24 \
   -lr 0.0001 --max_steps 450001 --cpu_num 1 --geo vec --valid_steps 15000 \
   --save_checkpoint_steps 5000 --tasks "1p.2p.3p.2i.3i.ip.pi" \
-  --checkpoint_path "logs/AIFB-gqs/1p.2p.3p.2i.3i.ip.pi/vec/g-24.0/2022.05.04-22:36:23/"
+  --checkpoint_path "logs/FB15k-237-betae/1p.2p.3p.2i.3i.ip.pi/vec/g-24.0/2022.05.03-20:14:00/"
