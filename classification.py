@@ -107,8 +107,8 @@ def find_best_threshold(
         x_order = np.argsort(x)
         x = x[x_order]
         y = y[x_order]
-        r = recalls[x_order]
-        p = precisions[x_order]
+        r = np.array(recalls)[x_order]
+        p = np.array(precisions)[x_order]
         plt.plot(x, y, '-', label="f1")
         plt.plot(x, r, '-', label="recall")
         plt.plot(x, p, '-', label="precision")
