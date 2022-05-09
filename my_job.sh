@@ -24,7 +24,7 @@ source /home/${USER}/.bashrc
 source activate thesis
 
 # Run your code
-srun python main.py --cuda --do_train --do_valid --do_test \
+srun python main.py --cuda --do_valid --do_test \
   -n 128 -b 512 -lr 0.0001 --max_steps 450001 --cpu_num 1 \
   --valid_steps 15000 --save_checkpoint_steps 5000 \
   --tasks "1p.2p.3p.2i.3i.ip.pi" ${@:1}
