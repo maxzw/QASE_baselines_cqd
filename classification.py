@@ -358,10 +358,22 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
     }
 
     metrics['weighted'] = {
-        'accuracy': np.mean([metrics[struct]['accuracy'] * struct_sizes[struct] for struct in metrics if struct is not 'macro']),
-        'precision': np.mean([metrics[struct]['precision'] * struct_sizes[struct] for struct in metrics if struct is not 'macro']),
-        'recall': np.mean([metrics[struct]['recall'] * struct_sizes[struct] for struct in metrics if struct is not 'macro']),
-        'f1': np.mean([metrics[struct]['f1'] * struct_sizes[struct] for struct in metrics if struct is not 'macro'])
+        'accuracy': np.average(
+            [metrics[struct]['accuracy'] for struct in metrics if struct is not 'macro'],
+            weights=[struct_sizes[struct] for struct in metrics if struct is not 'macro']
+        ),
+        'precision': np.average(
+            [metrics[struct]['precision'] for struct in metrics if struct is not 'macro'],
+            weights=[struct_sizes[struct] for struct in metrics if struct is not 'macro']
+        ),
+        'recall': np.average(
+            [metrics[struct]['recall'] for struct in metrics if struct is not 'macro'],
+            weights=[struct_sizes[struct] for struct in metrics if struct is not 'macro']
+        ),
+        'f1': np.average(
+            [metrics[struct]['f1'] for struct in metrics if struct is not 'macro'],
+            weights=[struct_sizes[struct] for struct in metrics if struct is not 'macro']
+        )
     }
 
     return metrics
