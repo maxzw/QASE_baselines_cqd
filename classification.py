@@ -67,8 +67,15 @@ def find_best_threshold(
     easy_answers: np.ndarray,
     hard_answers: np.ndarray, 
     struct_str: str = None, 
-    num_steps: int = 50
+    num_steps: int = 50,
+    model_name: str = None,
+    dataset_name: str = None,
+    save_path = None
     ) -> Tuple[float, float, float, float, float]:
+
+    # track precision and recall
+    precisions = []
+    recalls = []
 
     pos_dists = np.where(easy_answers, distances, 0) # find thresholds based on valid easy answers
     pos_dists[pos_dists==0] = np.nan
@@ -79,6 +86,8 @@ def find_best_threshold(
 
     def objective(threshold):
         accuracy, precision, recall, f1 = get_class_metrics(distances, easy_answers, hard_answers, threshold)
+        precisions.append(precision)
+        recalls.append(recall)
         return f1
     
     optimizer = BayesianOptimization(
@@ -91,8 +100,27 @@ def find_best_threshold(
         n_iter=num_steps,
     )
 
-    # save figure if needed
+    if (model_name is not None) and (dataset_name is not None) and (struct_str is not None) and (save_path is not None):
+        plt.figure(2, figsize=(10,10))
+        x = np.array([step['params']['threshold'] for step in optimizer.res])
+        y = np.array([step['target'] for step in optimizer.res])
+        x_order = np.argsort(x)
+        x = x[x_order]
+        y = y[x_order]
+        r = recalls[x_order]
+        p = precisions[x_order]
+        plt.plot(x, y, '-', label="f1")
+        plt.plot(x, r, '-', label="recall")
+        plt.plot(x, p, '-', label="precision")
+        plt.legend()
+        plt.xlabel("threshold")
+        plt.ylabel("score")
+        plt.title(f"{model_name}_{dataset_name}_{struct_str}")
+        plt.savefig(f"{save_path}/{model_name}_{dataset_name}_{struct_str}.png", facecolor='w', bbox_inches='tight')
+
     if struct_str is not None:
+        # save figure to collective f1 plot (1) if needed
+        plt.figure(1)
         x = np.array([step['params']['threshold'] for step in optimizer.res])
         y = np.array([step['target'] for step in optimizer.res])
         x_order = np.argsort(x)
@@ -109,6 +137,17 @@ def find_best_threshold(
 @torch.no_grad()
 def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader):
     model.eval()
+
+    model_name = None
+    if args.geo == 'vec':
+        model_name = 'GQE'
+    elif args.geo == 'beta':
+        model_name = 'BetaE'
+    elif args.geo == 'box':
+        model_name = 'Q2B'
+    elif args.geo == 'cqd':
+        model_name = 'CQD'
+    dataset_name = str(args.data_path).split("/")[-1].split('-')[0]
     
     # tracking thresholds and scores
     thresholds = {}
@@ -166,7 +205,7 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
     all_distances = model.gamma.cpu() - all_distances
 
     # Define plot
-    plt.figure(figsize=(10,10))
+    plt.figure(1, figsize=(10,10))
 
     # find best threshold for each query structure
     for struct in set(all_query_stuctures):
@@ -184,7 +223,10 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
             str_easy_answers_mask.bool().numpy(),
             str_hard_answers_mask.bool().numpy(),
             struct_str=query_name_dict[eval(struct)],
-            num_steps=100
+            num_steps=100,
+            model_name=model_name,
+            dataset_name=dataset_name,
+            save_path=args.save_path
         )
 
         logging.info(f"Threshold: {threshold:.4f}, Accuracy: {accuracy:.3f}, Precision: {precision:.3f}, Recall: {recall:.3f}, F1: {f1:.3f}")
@@ -198,19 +240,10 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
             'f1': f1
         }
 
-    model_name = None
-    if args.geo == 'vec':
-        model_name = 'GQE'
-    elif args.geo == 'beta':
-        model_name = 'BetaE'
-    elif args.geo == 'box':
-        model_name = 'Q2B'
-    elif args.geo == 'cqd':
-        model_name = 'CQD'
-
     # Save figure
-    if model_name is not None:
-        plt.title("Structure-wise f1 optimization results for {}".format(model_name))
+    plt.figure(1)
+    if (model_name is not None) and (dataset_name is not None):
+        plt.title("Structure-wise f1 optimization results for {} on {}".format(model_name, dataset_name))
     else:
         plt.title("Structure-wise f1 optimization results")
     plt.xlabel('Distance threshold')
