@@ -118,6 +118,7 @@ def find_best_threshold(
         plt.ylabel("Score")
         plt.title(f"{model_name}_{dataset_name}_{struct_str}")
         plt.savefig(f"{save_path}/{model_name}_{dataset_name}_{struct_str}.png", facecolor='w', bbox_inches='tight')
+        plt.clf()
 
     if struct_str is not None:
         # save figure to collective f1 plot (1) if needed
@@ -156,7 +157,6 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
 
     step = 0
     total_steps = len(test_dataloader)
-    early_stop = total_steps // 12
 
     # track queries, distances and answers
     all_query_stuctures = []
@@ -201,8 +201,6 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
 
         if step % 10 == 0:
             logging.info('Gathering predictions of batches... (%d/%d) ' % (step, total_steps))
-        if step > early_stop:
-            break
         step += 1
 
     # IMPORTANT: reset to raw distances
@@ -254,6 +252,7 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
     plt.ylabel('f1-score')
     plt.legend()
     plt.savefig(args.save_path + "/threshold_search.png", facecolor='w', bbox_inches='tight')
+    plt.clf()
 
     return thresholds, metrics
 
@@ -267,7 +266,6 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
 
     step = 0
     total_steps = len(test_dataloader)
-    early_stop = total_steps // 12
 
     # track queries, distances and answers
     all_query_stuctures = []
@@ -312,8 +310,6 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
 
         if step % 10 == 0:
             logging.info('Gathering predictions of batches... (%d/%d)' % (step, total_steps))
-        if step > early_stop:
-            break
         step += 1
 
     # IMPORTANT: reset to raw distances
