@@ -290,7 +290,7 @@ def main(args):
         if args.use_qa_iterator is True:
             TrainDatasetClass = CQDTrainDataset
 
-        if len(train_path_iterator) > 0:
+        if len(train_path_queries) > 0:
             train_path_queries = flatten_query(train_path_queries)
             train_path_iterator = SingledirectionalOneShotIterator(DataLoader(
                                         TrainDatasetClass(train_path_queries, nentity, nrelation, args.negative_sample_size, train_answers),
