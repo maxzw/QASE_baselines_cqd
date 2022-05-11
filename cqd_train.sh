@@ -24,7 +24,7 @@ source /home/${USER}/.bashrc
 source activate thesis
 
 # Run your code
-srun python main.py --do_valid --do_test \
+srun python main.py --do_train --do_valid --do_test \
     -n 1 -b 2000 -d 1000 -lr 0.1 --warm_up_steps 100000000 --max_steps 100000 \
     --cpu_num 0 --geo cqd --valid_steps 500 --print_on_screen --save_checkpoint_steps 5000 \
     --test_batch_size 1000 --optimizer adagrad --reg_weight 0.1 --log_steps 500 \
