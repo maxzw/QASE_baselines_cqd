@@ -25,8 +25,7 @@ source activate thesis
 
 # Run your code
 srun python main.py --do_test --data_path data/FB15k-q2b -n 1 -b 1000 -d 1000 \
---cpu_num 0 --geo cqd --tasks 1p --print_on_screen --test_batch_size 1 --cqd discrete\
-${@:1}
+--cpu_num 0 --geo cqd --tasks 1p --print_on_screen --test_batch_size 1 --cqd discrete ${@:1}
 
 
 # --data_path data/FB15k-237-q2b
