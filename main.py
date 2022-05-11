@@ -201,6 +201,7 @@ def load_data(args, tasks):
         else:
             evaluate_union = args.evaluate_union
         if name not in tasks or evaluate_union != args.evaluate_union:
+            logging.info("Removing %s" % name)
             query_structure = name_query_dict[name if 'u' not in name else '-'.join([name, evaluate_union])]
             if query_structure in train_queries:
                 del train_queries[query_structure]
