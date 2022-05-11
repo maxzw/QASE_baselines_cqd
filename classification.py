@@ -137,7 +137,6 @@ def find_best_threshold(
     return best_threshold, best_accuracy, best_precision, best_recall, best_f1
 
 
-@torch.no_grad()
 def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader):
     model.eval()
 
@@ -165,44 +164,47 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
     all_easy_answers_mask = torch.empty((0, model.nentity))
     all_hard_answers_mask = torch.empty((0, model.nentity))
     
-    for negative_sample, queries, queries_unflatten, query_structures in tqdm(test_dataloader, disable=not args.print_on_screen):
-        
-        # get distances
-        batch_queries_dict = defaultdict(list)
-        batch_idxs_dict = defaultdict(list)
-        for i, query in enumerate(queries):
-            batch_queries_dict[query_structures[i]].append(query)
-            batch_idxs_dict[query_structures[i]].append(i)
-        for query_structure in batch_queries_dict:
+    requires_grad = isinstance(model, CQD) and model.method == 'continuous'
+
+    with torch.set_grad_enabled(requires_grad):
+        for negative_sample, queries, queries_unflatten, query_structures in tqdm(test_dataloader, disable=not args.print_on_screen):
+            
+            # get distances
+            batch_queries_dict = defaultdict(list)
+            batch_idxs_dict = defaultdict(list)
+            for i, query in enumerate(queries):
+                batch_queries_dict[query_structures[i]].append(query)
+                batch_idxs_dict[query_structures[i]].append(i)
+            for query_structure in batch_queries_dict:
+                if args.cuda:
+                    batch_queries_dict[query_structure] = torch.LongTensor(batch_queries_dict[query_structure]).cuda()
+                else:
+                    batch_queries_dict[query_structure] = torch.LongTensor(batch_queries_dict[query_structure])
             if args.cuda:
-                batch_queries_dict[query_structure] = torch.LongTensor(batch_queries_dict[query_structure]).cuda()
-            else:
-                batch_queries_dict[query_structure] = torch.LongTensor(batch_queries_dict[query_structure])
-        if args.cuda:
-            negative_sample = negative_sample.cuda()
-        # negative logit, size: (batch_size, num_ents)
-        _, negative_logit, _, idxs = model(None, negative_sample, None, batch_queries_dict, batch_idxs_dict)
-        queries_unflatten = [queries_unflatten[i] for i in idxs]
-        query_structures = [str(query_structures[i]) for i in idxs]
+                negative_sample = negative_sample.cuda()
+            # negative logit, size: (batch_size, num_ents)
+            _, negative_logit, _, idxs = model(None, negative_sample, None, batch_queries_dict, batch_idxs_dict)
+            queries_unflatten = [queries_unflatten[i] for i in idxs]
+            query_structures = [str(query_structures[i]) for i in idxs]
 
-        # get answers
-        easy_answer_ent_ids = [list(easy_answers[query]) for query in queries_unflatten] # size: (batch_size, VARIABLE)
-        hard_answer_ent_ids = [list(hard_answers[query]) for query in queries_unflatten] # size: (batch_size, VARIABLE)
-        easy_answers_mask = torch.zeros((len(query_structures), model.nentity)) # initialize with zeros, size: (batch_size, num_ents)
-        hard_answers_mask = torch.zeros((len(query_structures), model.nentity))
-        for i, (easy_ent_ids, hard_ent_ids) in enumerate(zip(easy_answer_ent_ids, hard_answer_ent_ids)):
-            easy_answers_mask[i, easy_ent_ids] = 1
-            hard_answers_mask[i, hard_ent_ids] = 1
+            # get answers
+            easy_answer_ent_ids = [list(easy_answers[query]) for query in queries_unflatten] # size: (batch_size, VARIABLE)
+            hard_answer_ent_ids = [list(hard_answers[query]) for query in queries_unflatten] # size: (batch_size, VARIABLE)
+            easy_answers_mask = torch.zeros((len(query_structures), model.nentity)) # initialize with zeros, size: (batch_size, num_ents)
+            hard_answers_mask = torch.zeros((len(query_structures), model.nentity))
+            for i, (easy_ent_ids, hard_ent_ids) in enumerate(zip(easy_answer_ent_ids, hard_answer_ent_ids)):
+                easy_answers_mask[i, easy_ent_ids] = 1
+                hard_answers_mask[i, hard_ent_ids] = 1
 
-        # add to tracking
-        all_query_stuctures.extend(query_structures)
-        all_distances = torch.cat((all_distances, negative_logit.cpu()), dim=0)
-        all_easy_answers_mask = torch.cat((all_easy_answers_mask, easy_answers_mask.cpu()), dim=0)
-        all_hard_answers_mask = torch.cat((all_hard_answers_mask, hard_answers_mask.cpu()), dim=0)
+            # add to tracking
+            all_query_stuctures.extend(query_structures)
+            all_distances = torch.cat((all_distances, negative_logit.cpu()), dim=0)
+            all_easy_answers_mask = torch.cat((all_easy_answers_mask, easy_answers_mask.cpu()), dim=0)
+            all_hard_answers_mask = torch.cat((all_hard_answers_mask, hard_answers_mask.cpu()), dim=0)
 
-        if step % 10 == 0:
-            logging.info('Gathering predictions of batches... (%d/%d) ' % (step, total_steps))
-        step += 1
+            if step % 10 == 0:
+                logging.info('Gathering predictions of batches... (%d/%d) ' % (step, total_steps))
+            step += 1
 
     # IMPORTANT: reset to raw distances
     if isinstance(model, KGReasoning):
@@ -259,7 +261,6 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
     return thresholds, metrics
 
 
-@torch.no_grad()
 def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_dataloader, thresholds):
     model.eval()
     
@@ -275,44 +276,47 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
     all_easy_answers_mask = torch.empty((0, model.nentity))
     all_hard_answers_mask = torch.empty((0, model.nentity))
 
-    for negative_sample, queries, queries_unflatten, query_structures in tqdm(test_dataloader, disable=not args.print_on_screen):
-        
-        # get distances
-        batch_queries_dict = defaultdict(list)
-        batch_idxs_dict = defaultdict(list)
-        for i, query in enumerate(queries):
-            batch_queries_dict[query_structures[i]].append(query)
-            batch_idxs_dict[query_structures[i]].append(i)
-        for query_structure in batch_queries_dict:
+    requires_grad = isinstance(model, CQD) and model.method == 'continuous'
+
+    with torch.set_grad_enabled(requires_grad):
+        for negative_sample, queries, queries_unflatten, query_structures in tqdm(test_dataloader, disable=not args.print_on_screen):
+            
+            # get distances
+            batch_queries_dict = defaultdict(list)
+            batch_idxs_dict = defaultdict(list)
+            for i, query in enumerate(queries):
+                batch_queries_dict[query_structures[i]].append(query)
+                batch_idxs_dict[query_structures[i]].append(i)
+            for query_structure in batch_queries_dict:
+                if args.cuda:
+                    batch_queries_dict[query_structure] = torch.LongTensor(batch_queries_dict[query_structure]).cuda()
+                else:
+                    batch_queries_dict[query_structure] = torch.LongTensor(batch_queries_dict[query_structure])
             if args.cuda:
-                batch_queries_dict[query_structure] = torch.LongTensor(batch_queries_dict[query_structure]).cuda()
-            else:
-                batch_queries_dict[query_structure] = torch.LongTensor(batch_queries_dict[query_structure])
-        if args.cuda:
-            negative_sample = negative_sample.cuda()
-        # negative logit, size: (batch_size, num_ents)
-        _, negative_logit, _, idxs = model(None, negative_sample, None, batch_queries_dict, batch_idxs_dict)
-        queries_unflatten = [queries_unflatten[i] for i in idxs]
-        query_structures = [str(query_structures[i]) for i in idxs]
+                negative_sample = negative_sample.cuda()
+            # negative logit, size: (batch_size, num_ents)
+            _, negative_logit, _, idxs = model(None, negative_sample, None, batch_queries_dict, batch_idxs_dict)
+            queries_unflatten = [queries_unflatten[i] for i in idxs]
+            query_structures = [str(query_structures[i]) for i in idxs]
 
-        # get answers
-        easy_answer_ent_ids = [list(easy_answers[query]) for query in queries_unflatten] # size: (batch_size, VARIABLE)
-        hard_answer_ent_ids = [list(hard_answers[query]) for query in queries_unflatten] # size: (batch_size, VARIABLE)
-        easy_answers_mask = torch.zeros((len(query_structures), model.nentity)) # initialize with zeros, size: (batch_size, num_ents)
-        hard_answers_mask = torch.zeros((len(query_structures), model.nentity))
-        for i, (easy_ent_ids, hard_ent_ids) in enumerate(zip(easy_answer_ent_ids, hard_answer_ent_ids)):
-            easy_answers_mask[i, easy_ent_ids] = 1
-            hard_answers_mask[i, hard_ent_ids] = 1
+            # get answers
+            easy_answer_ent_ids = [list(easy_answers[query]) for query in queries_unflatten] # size: (batch_size, VARIABLE)
+            hard_answer_ent_ids = [list(hard_answers[query]) for query in queries_unflatten] # size: (batch_size, VARIABLE)
+            easy_answers_mask = torch.zeros((len(query_structures), model.nentity)) # initialize with zeros, size: (batch_size, num_ents)
+            hard_answers_mask = torch.zeros((len(query_structures), model.nentity))
+            for i, (easy_ent_ids, hard_ent_ids) in enumerate(zip(easy_answer_ent_ids, hard_answer_ent_ids)):
+                easy_answers_mask[i, easy_ent_ids] = 1
+                hard_answers_mask[i, hard_ent_ids] = 1
 
-        # add to tracking
-        all_query_stuctures.extend(query_structures)
-        all_distances = torch.cat((all_distances, negative_logit.cpu()), dim=0)
-        all_easy_answers_mask = torch.cat((all_easy_answers_mask, easy_answers_mask.cpu()), dim=0)
-        all_hard_answers_mask = torch.cat((all_hard_answers_mask, hard_answers_mask.cpu()), dim=0)
+            # add to tracking
+            all_query_stuctures.extend(query_structures)
+            all_distances = torch.cat((all_distances, negative_logit.cpu()), dim=0)
+            all_easy_answers_mask = torch.cat((all_easy_answers_mask, easy_answers_mask.cpu()), dim=0)
+            all_hard_answers_mask = torch.cat((all_hard_answers_mask, hard_answers_mask.cpu()), dim=0)
 
-        if step % 10 == 0:
-            logging.info('Gathering predictions of batches... (%d/%d)' % (step, total_steps))
-        step += 1
+            if step % 10 == 0:
+                logging.info('Gathering predictions of batches... (%d/%d)' % (step, total_steps))
+            step += 1
 
     # IMPORTANT: reset to raw distances
     if not isinstance(model, CQD):
