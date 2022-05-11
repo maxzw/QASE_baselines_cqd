@@ -10,6 +10,7 @@ from bayes_opt import BayesianOptimization
 import matplotlib.pyplot as plt
 
 from cqd.base import CQD
+from models import KGReasoning
 
 query_name_dict = {('e',('r',)): '1p', 
                     ('e', ('r', 'r')): '2p',
@@ -204,7 +205,8 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
         step += 1
 
     # IMPORTANT: reset to raw distances
-    all_distances = model.gamma.cpu() - all_distances
+    if isinstance(model, KGReasoning):
+        all_distances = model.gamma.cpu() - all_distances
 
     # Define plot
     plt.figure(1, figsize=(10,10))
@@ -245,9 +247,9 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
     # Save figure
     plt.figure(1)
     if (model_name is not None) and (dataset_name is not None):
-        plt.title("Structure-wise f1 optimization results for {} on {}".format(model_name, dataset_name))
+        plt.title("Opt_{}_{}".format(model_name, dataset_name))
     else:
-        plt.title("Structure-wise f1 optimization results")
+        plt.title("Optimization results")
     plt.xlabel('Distance threshold')
     plt.ylabel('f1-score')
     plt.legend()
