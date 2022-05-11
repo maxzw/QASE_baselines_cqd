@@ -209,6 +209,8 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
     # IMPORTANT: reset to raw distances
     if isinstance(model, KGReasoning):
         all_distances = model.gamma.cpu() - all_distances
+    else:
+        all_distances = -all_distances
 
     # Define plot
     plt.figure(1, figsize=(10,10))
@@ -319,8 +321,10 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
             step += 1
 
     # IMPORTANT: reset to raw distances
-    if not isinstance(model, CQD):
+    if isinstance(model, KGReasoning):
         all_distances = model.gamma.cpu() - all_distances
+    else:
+        all_distances = -all_distances
 
     struct_sizes = {}
     # find best threshold for each query structure
