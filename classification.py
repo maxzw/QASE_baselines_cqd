@@ -83,7 +83,10 @@ def find_best_threshold(
     pos_dists_mean = np.nanmean(pos_dists)
     pos_dists_3std = np.nanstd(pos_dists) * 3
 
+    logging.info(f"mean: {pos_dists_mean}, std: {pos_dists_3std}")
+
     pbounds = {'threshold': (pos_dists_mean - pos_dists_3std, pos_dists_mean + pos_dists_3std)}
+    logging.info(f"bounds: {pbounds}")
 
     def objective(threshold):
         accuracy, precision, recall, f1 = get_class_metrics(distances, easy_answers, hard_answers, threshold)
