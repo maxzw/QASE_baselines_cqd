@@ -579,7 +579,7 @@ class KGReasoning(nn.Module):
             subsampling_weight = subsampling_weight.cuda()
 
         if isinstance(model, CQD):
-            input_batch = batch_queries_dict[('e', ('r',))]
+            input_batch = batch_queries_dict[query_structures[0]]
             logging.info('input_batch: {}'.format(input_batch))
             input_batch = torch.cat((input_batch, positive_sample.unsqueeze(1)), dim=1)
             loss = model.loss(input_batch)
