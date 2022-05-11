@@ -285,19 +285,23 @@ def main(args):
                 train_path_queries[query_structure] = train_queries[query_structure]
             else:
                 train_other_queries[query_structure] = train_queries[query_structure]
-        train_path_queries = flatten_query(train_path_queries)
 
         TrainDatasetClass = TrainDataset
         if args.use_qa_iterator is True:
             TrainDatasetClass = CQDTrainDataset
 
-        train_path_iterator = SingledirectionalOneShotIterator(DataLoader(
-                                    TrainDatasetClass(train_path_queries, nentity, nrelation, args.negative_sample_size, train_answers),
-                                    batch_size=args.batch_size,
-                                    shuffle=True,
-                                    num_workers=args.cpu_num,
-                                    collate_fn=TrainDatasetClass.collate_fn
-                                ))
+        if len(train_path_iterator) > 0:
+            train_path_queries = flatten_query(train_path_queries)
+            train_path_iterator = SingledirectionalOneShotIterator(DataLoader(
+                                        TrainDatasetClass(train_path_queries, nentity, nrelation, args.negative_sample_size, train_answers),
+                                        batch_size=args.batch_size,
+                                        shuffle=True,
+                                        num_workers=args.cpu_num,
+                                        collate_fn=TrainDatasetClass.collate_fn
+                                    ))
+        else:
+            train_path_iterator = None
+
         if len(train_other_queries) > 0:
             train_other_queries = flatten_query(train_other_queries)
             train_other_iterator = SingledirectionalOneShotIterator(DataLoader(
@@ -309,6 +313,7 @@ def main(args):
                                     ))
         else:
             train_other_iterator = None
+    assert train_path_iterator is not None or train_other_iterator is not None, "no training data"
     
     logging.info("Validation info:")
     if args.do_valid:
@@ -438,19 +443,29 @@ def main(args):
             if step == 2*args.max_steps//3:
                 args.valid_steps *= 4
 
-            log = KGReasoning.train_step(model, optimizer, train_path_iterator, args, step)
-            for metric in log:
-                writer.add_scalar('path_'+metric, log[metric], step)
+            if train_path_iterator is not None:
+                log = KGReasoning.train_step(model, optimizer, train_path_iterator, args, step)
+                for metric in log:
+                    writer.add_scalar('path_'+metric, log[metric], step)
             if train_other_iterator is not None:
                 log = KGReasoning.train_step(model, optimizer, train_other_iterator, args, step)
                 for metric in log:
                     writer.add_scalar('other_'+metric, log[metric], step)
                 log = KGReasoning.train_step(model, optimizer, train_path_iterator, args, step)
+            if train_path_iterator is not None:
+                log = KGReasoning.train_step(model, optimizer, train_path_iterator, args, step)
+                for metric in log:
+                    writer.add_scalar('path_'+metric, log[metric], step)
 
             training_logs.append(log)
-            if (step + 1) % train_path_iterator.samples == 0:
-                epoch = (step + 1) // train_path_iterator.samples
-                emb_uniquenesses.update({(epoch, step): get_emb_uniqueness(model)})
+            if train_path_iterator is not None:
+                if (step + 1) % train_path_iterator.samples == 0:
+                    epoch = (step + 1) // train_path_iterator.samples
+                    emb_uniquenesses.update({(epoch, step): get_emb_uniqueness(model)})
+            elif train_other_iterator is not None:
+                if (step + 1) % train_other_iterator.samples == 0:
+                    epoch = (step + 1) // train_other_iterator.samples
+                    emb_uniquenesses.update({(epoch, step): get_emb_uniqueness(model)})
 
             if step >= warm_up_steps:
                 current_learning_rate = current_learning_rate / 5
