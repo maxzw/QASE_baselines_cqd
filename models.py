@@ -580,6 +580,7 @@ class KGReasoning(nn.Module):
 
         if isinstance(model, CQD):
             input_batch = batch_queries_dict[('e', ('r',))]
+            logging.info('input_batch: {}'.format(input_batch))
             input_batch = torch.cat((input_batch, positive_sample.unsqueeze(1)), dim=1)
             loss = model.loss(input_batch)
 
