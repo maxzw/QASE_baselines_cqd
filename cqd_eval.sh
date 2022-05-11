@@ -4,7 +4,7 @@
 #SBATCH --cpus-per-task=2
 #SBATCH --gpus=1
 #SBATCH --partition=gpu_shared
-#SBATCH --time=100:00:00
+#SBATCH --time=1:00:00
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=m.j.zwager@student.vu.nl
 #SBATCH --output=job_logs/output_%A.out
