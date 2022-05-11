@@ -451,7 +451,6 @@ def main(args):
                 log = KGReasoning.train_step(model, optimizer, train_other_iterator, args, step)
                 for metric in log:
                     writer.add_scalar('other_'+metric, log[metric], step)
-                log = KGReasoning.train_step(model, optimizer, train_path_iterator, args, step)
             if train_path_iterator is not None:
                 log = KGReasoning.train_step(model, optimizer, train_path_iterator, args, step)
                 for metric in log:
