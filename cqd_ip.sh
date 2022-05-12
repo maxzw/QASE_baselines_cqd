@@ -4,7 +4,7 @@
 #SBATCH --cpus-per-task=2
 #SBATCH --gpus=1
 #SBATCH --partition=gpu_shared
-#SBATCH --time=100:00:00
+#SBATCH --time=1:00:00
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=m.j.zwager@student.vu.nl
 #SBATCH --output=job_logs/output_%A.out
@@ -24,13 +24,8 @@ source /home/${USER}/.bashrc
 source activate thesis
 
 # Run your code
-srun python main.py --cuda --do_valid --do_test \
-  -n 128 -b 512 -lr 0.0001 --max_steps 450001 --cpu_num 1 \
-  --valid_steps 15000 --save_checkpoint_steps 5000 \
-  --tasks "1p.2p.3p.2i.3i.ip.pi" ${@:1}
-
-# --geo ...
-# geo args...
+srun python main.py --do_valid --do_test -n 1 -b 1000 -d 1000 --cpu_num 0 --geo cqd --tasks ip --print_on_screen \
+--test_batch_size 1 --cqd discrete --cqd-t-norm prod --cqd-k 16 --cuda ${@:1}
 
 # --data_path data/...
 # --checkpoint_path ...
