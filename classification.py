@@ -88,9 +88,10 @@ def find_best_threshold(
     if model_name == "GQE":
         pbounds = {'threshold': (pos_dists_mean - pos_dists_std*5, pos_dists_mean + pos_dists_std*5)} # works!
     elif model_name == "Q2B":
-        pbounds = {'threshold': (pos_dists_mean - pos_dists_std*2, pos_dists_mean + pos_dists_std*8)}
+        pbounds = {'threshold': (pos_dists_mean - pos_dists_std*2, pos_dists_mean + pos_dists_std*8)} # works!
     elif model_name == "BetaE":
-        pbounds = {'threshold': (pos_dists_mean - pos_dists_std*2, pos_dists_mean + pos_dists_std*8)}
+        pbounds = {'threshold': (pos_dists_mean - pos_dists_std*2, pos_dists_mean + pos_dists_std*8)} # works!
+    # elif model_name == "CQD":
     else:
         pbounds = {'threshold': (pos_dists_mean - pos_dists_std*5, pos_dists_mean + pos_dists_std*5)}
     logging.info("Using the following bounds: {}".format(pbounds))
@@ -369,7 +370,7 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
         )
 
         # save threshold and metrics
-        metrics[eval(struct)] = {
+        metrics[struct] = {
             'accuracy': accuracy,
             'precision': precision,
             'recall': recall,
