@@ -82,11 +82,10 @@ def find_best_threshold(
     pos_dists[pos_dists==0] = np.nan
     pos_dists_mean = np.nanmean(pos_dists)
     pos_dists_std = np.nanstd(pos_dists) * 3
+
+    logging.info(f"Mean distance: {pos_dists_mean}, std: {pos_dists_std}, min: {np.nanmin(pos_dists)}, max: {np.nanmax(pos_dists)}")
     
-    if model_name == "CQD":
-        pbounds = {'threshold': (pos_dists_mean - 3, pos_dists_mean + 3)}
-    else:
-        pbounds = {'threshold': (pos_dists_mean - pos_dists_std, pos_dists_mean + pos_dists_std)}
+    pbounds = {'threshold': (pos_dists_mean - pos_dists_std, pos_dists_mean + pos_dists_std)}
 
     def objective(threshold):
         accuracy, precision, recall, f1 = get_class_metrics(distances, easy_answers, hard_answers, threshold)
