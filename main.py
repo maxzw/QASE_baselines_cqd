@@ -506,7 +506,7 @@ def main(args):
                 log_metrics('Training average', step, metrics)
                 training_logs = []
 
-        logging.info(f"Embedding uniquenesses per epoch/step: {emb_uniquenesses}")
+        # logging.info(f"Embedding uniquenesses per epoch/step: {emb_uniquenesses}")
 
         if args.do_train:
             save_variable_list = {
