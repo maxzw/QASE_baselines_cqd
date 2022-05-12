@@ -455,8 +455,13 @@ def main(args):
                 log = KGReasoning.train_step(model, optimizer, train_path_iterator, args, step)
                 for metric in log:
                     writer.add_scalar('path_'+metric, log[metric], step)
+            else:
+                log = KGReasoning.train_step(model, optimizer, train_other_iterator, args, step)
+                for metric in log:
+                    writer.add_scalar('other_'+metric, log[metric], step)
 
             training_logs.append(log)
+            
             if train_path_iterator is not None:
                 if (step + 1) % train_path_iterator.samples == 0:
                     epoch = (step + 1) // train_path_iterator.samples
@@ -475,7 +480,7 @@ def main(args):
                 )
                 warm_up_steps = warm_up_steps * 1.5
             
-            if step % args.save_checkpoint_steps == 0:
+            if step % args.save_checkpoint_steps == 0 and args.do_train:
                 save_variable_list = {
                     'step': step, 
                     'current_learning_rate': current_learning_rate,
@@ -503,12 +508,13 @@ def main(args):
 
         logging.info(f"Embedding uniquenesses per epoch/step: {emb_uniquenesses}")
 
-        save_variable_list = {
-            'step': step, 
-            'current_learning_rate': current_learning_rate,
-            'warm_up_steps': warm_up_steps
-        }
-        save_model(model, optimizer, save_variable_list, args)
+        if args.do_train:
+            save_variable_list = {
+                'step': step, 
+                'current_learning_rate': current_learning_rate,
+                'warm_up_steps': warm_up_steps
+            }
+            save_model(model, optimizer, save_variable_list, args)
         
     try:
         print (step)

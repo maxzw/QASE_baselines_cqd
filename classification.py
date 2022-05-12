@@ -123,15 +123,15 @@ def find_best_threshold(
         plt.savefig(f"{save_path}/{model_name}_{dataset_name}_{struct_str}.png", facecolor='w', bbox_inches='tight')
         plt.clf()
 
-    # if struct_str is not None:
-    #     # save figure to collective f1 plot (1) if needed
-    #     plt.figure(1)
-    #     x = np.array([step['params']['threshold'] for step in optimizer.res])
-    #     y = np.array([step['target'] for step in optimizer.res])
-    #     x_order = np.argsort(x)
-    #     x = x[x_order]
-    #     y = y[x_order]
-    #     plt.plot(x, y, 'x-', label=struct_str)
+    if struct_str is not None:
+        # save figure to collective f1 plot (1) if needed
+        x = np.array([step['params']['threshold'] for step in optimizer.res])
+        y = np.array([step['target'] for step in optimizer.res])
+        x_order = np.argsort(x)
+        x = x[x_order]
+        y = y[x_order]
+        plt.figure(1)
+        plt.plot(x, y, 'x-', label=struct_str)
 
     best_threshold = optimizer.max['params']['threshold']
     best_accuracy, best_precision, best_recall, best_f1 = get_class_metrics(distances, easy_answers, hard_answers, best_threshold)
@@ -159,7 +159,7 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
 
     step = 0
     total_steps = len(test_dataloader)
-    early_stop = total_steps // 100
+    early_stop = total_steps // 50
 
     # track queries, distances and answers
     all_query_stuctures = []
@@ -216,7 +216,7 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
         all_distances = model.gamma.cpu() - all_distances
 
     # Define plot
-    # plt.figure(1, figsize=(10,10))
+    plt.figure(1, figsize=(10,10))
 
     # find best threshold for each query structure
     for struct in set(all_query_stuctures):
@@ -243,8 +243,8 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
         logging.info(f"Threshold: {threshold:.4f}, Accuracy: {accuracy:.3f}, Precision: {precision:.3f}, Recall: {recall:.3f}, F1: {f1:.3f}")
         
         # save threshold and metrics
-        thresholds[struct] = threshold
-        metrics[struct] = {
+        thresholds[eval(struct)] = threshold
+        metrics[eval(struct)] = {
             'accuracy': accuracy,
             'precision': precision,
             'recall': recall,
@@ -252,16 +252,17 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
         }
 
     # Save figure
-    # plt.figure(1)
-    # if (model_name is not None) and (dataset_name is not None):
-    #     plt.title("Opt_{}_{}".format(model_name, dataset_name))
-    # else:
-    #     plt.title("Optimization results")
-    # plt.xlabel('Distance threshold')
-    # plt.ylabel('f1-score')
-    # plt.legend()
-    # plt.savefig(args.save_path + "/threshold_search.png", facecolor='w', bbox_inches='tight')
-    # plt.clf()
+    if (model_name is not None) and (dataset_name is not None):
+        title = "Opt_{}_{}".format(model_name, dataset_name)
+    else:
+        title = "Optimization results"
+    plt.figure(1)
+    plt.title(title)
+    plt.xlabel('Distance threshold')
+    plt.ylabel('f1-score')
+    plt.legend()
+    plt.savefig(args.save_path + "/threshold_search.png", facecolor='w', bbox_inches='tight')
+    plt.clf()
 
     return thresholds, metrics
 
@@ -274,7 +275,7 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
 
     step = 0
     total_steps = len(test_dataloader)
-    early_stop = total_steps // 100
+    early_stop = total_steps // 50
 
     # track queries, distances and answers
     all_query_stuctures = []
@@ -322,7 +323,7 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
 
             if step % 10 == 0:
                 logging.info('Gathering predictions of batches... (%d/%d)' % (step, total_steps))
-            if step > early_stop:
+            if step == early_stop:
                 break
             step += 1
 
@@ -342,7 +343,7 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
         str_hard_answers_mask = all_hard_answers_mask[struct_idx, :]
 
         # track size of current structure for weighted metrics
-        struct_sizes[struct] = len(struct_idx)
+        struct_sizes[eval(struct)] = len(struct_idx)
 
         # find best threshold and metrics
         accuracy, precision, recall, f1 = get_class_metrics(
@@ -353,7 +354,7 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
         )
 
         # save threshold and metrics
-        metrics[struct] = {
+        metrics[eval(struct)] = {
             'accuracy': accuracy,
             'precision': precision,
             'recall': recall,
@@ -361,28 +362,28 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
         }
 
     metrics['macro'] = {
-        'accuracy': np.mean([metrics[struct]['accuracy'] for struct in metrics]),
-        'precision': np.mean([metrics[struct]['precision'] for struct in metrics]),
-        'recall': np.mean([metrics[struct]['recall'] for struct in metrics]),
-        'f1': np.mean([metrics[struct]['f1'] for struct in metrics])
+        'accuracy': np.mean([metrics[eval(struct)]['accuracy'] for struct in metrics]),
+        'precision': np.mean([metrics[eval(struct)]['precision'] for struct in metrics]),
+        'recall': np.mean([metrics[eval(struct)]['recall'] for struct in metrics]),
+        'f1': np.mean([metrics[eval(struct)]['f1'] for struct in metrics])
     }
 
     metrics['weighted'] = {
         'accuracy': np.average(
-            [metrics[struct]['accuracy'] for struct in metrics if struct != 'macro'],
-            weights=[struct_sizes[struct] for struct in metrics if struct != 'macro']
+            [metrics[eval(struct)]['accuracy'] for struct in metrics if struct != 'macro'],
+            weights=[struct_sizes[eval(struct)] for struct in metrics if struct != 'macro']
         ),
         'precision': np.average(
-            [metrics[struct]['precision'] for struct in metrics if struct != 'macro'],
-            weights=[struct_sizes[struct] for struct in metrics if struct != 'macro']
+            [metrics[eval(struct)]['precision'] for struct in metrics if struct != 'macro'],
+            weights=[struct_sizes[eval(struct)] for struct in metrics if struct != 'macro']
         ),
         'recall': np.average(
-            [metrics[struct]['recall'] for struct in metrics if struct != 'macro'],
-            weights=[struct_sizes[struct] for struct in metrics if struct != 'macro']
+            [metrics[eval(struct)]['recall'] for struct in metrics if struct != 'macro'],
+            weights=[struct_sizes[eval(struct)] for struct in metrics if struct != 'macro']
         ),
         'f1': np.average(
-            [metrics[struct]['f1'] for struct in metrics if struct != 'macro'],
-            weights=[struct_sizes[struct] for struct in metrics if struct != 'macro']
+            [metrics[eval(struct)]['f1'] for struct in metrics if struct != 'macro'],
+            weights=[struct_sizes[eval(struct)] for struct in metrics if struct != 'macro']
         )
     }
 
