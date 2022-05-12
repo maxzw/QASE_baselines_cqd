@@ -1,5 +1,6 @@
 """Custom evaluation functions used for binary classification."""
 import logging
+from pickle import HIGHEST_PROTOCOL
 from typing import Tuple
 from collections import defaultdict
 
@@ -221,10 +222,11 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
     # Define plot
     plt.figure(1, figsize=(10,10))
 
-    torch.save(all_distances, f"{args.save_path}/opt/distances.pt")
-    torch.save(all_easy_answers_mask, f"{args.save_path}/opt/easy_answers_mask.pt")
-    torch.save(all_hard_answers_mask, f"{args.save_path}/opt/hard_answers_mask.pt")
-    torch.save(all_query_stuctures, f"{args.save_path}/opt/query_structures.pt")
+    torch.save(all_distances, f"{args.save_path}/opt/distances.pt", pickle_protocol=HIGHEST_PROTOCOL)
+    torch.save(all_easy_answers_mask, f"{args.save_path}/opt/easy_answers_mask.pt", pickle_protocol=HIGHEST_PROTOCOL)
+    torch.save(all_hard_answers_mask, f"{args.save_path}/opt/hard_answers_mask.pt", pickle_protocol=HIGHEST_PROTOCOL)
+    torch.save(all_query_stuctures, f"{args.save_path}/opt/query_structures.pt", pickle_protocol=HIGHEST_PROTOCOL)
+
 
     # find best threshold for each query structure
     for struct in set(all_query_stuctures):
