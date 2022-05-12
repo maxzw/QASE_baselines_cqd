@@ -221,6 +221,8 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
     # Define plot
     plt.figure(1, figsize=(10,10))
 
+    torch.save(all_distances, f"{args.checkpoint_path}/distances.pt")
+
     # find best threshold for each query structure
     for struct in set(all_query_stuctures):
         logging.info(f"Finding best threshold for structure: {struct} / {query_name_dict[eval(struct)]}")
