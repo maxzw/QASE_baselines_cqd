@@ -90,7 +90,7 @@ def find_best_threshold(
     elif model_name == "Q2B":
         pbounds = {'threshold': (pos_dists_mean - pos_dists_std*2, pos_dists_mean + pos_dists_std*8)} # works!
     elif model_name == "BetaE":
-        pbounds = {'threshold': (pos_dists_mean - pos_dists_std*2, pos_dists_mean + pos_dists_std*8)} # works!
+        pbounds = {'threshold': (pos_dists_mean - pos_dists_std*2, pos_dists_mean + pos_dists_std*10)} # works!
     # elif model_name == "CQD":
     else:
         pbounds = {'threshold': (pos_dists_mean - pos_dists_std*5, pos_dists_mean + pos_dists_std*5)}
