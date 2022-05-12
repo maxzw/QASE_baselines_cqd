@@ -82,7 +82,7 @@ def find_best_threshold(
     pos_dists[pos_dists==0] = np.nan
     pos_dists_mean = np.nanmean(pos_dists)
     if model_name == "CQD":
-        pos_dists_std = np.nanstd(pos_dists) * 10
+        pos_dists_std = np.nanstd(pos_dists) * 6
     else:
         pos_dists_std = np.nanstd(pos_dists) * 3
 
@@ -101,7 +101,9 @@ def find_best_threshold(
     )
 
     optimizer.maximize(
+        init_points=20,
         n_iter=num_steps,
+
     )
 
     if (model_name is not None) and (dataset_name is not None) and (struct_str is not None) and (save_path is not None):
