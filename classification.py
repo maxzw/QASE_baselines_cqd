@@ -378,28 +378,28 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
         }
 
     metrics['macro'] = {
-        'accuracy': np.mean([metrics[eval(struct)]['accuracy'] for struct in metrics]),
-        'precision': np.mean([metrics[eval(struct)]['precision'] for struct in metrics]),
-        'recall': np.mean([metrics[eval(struct)]['recall'] for struct in metrics]),
-        'f1': np.mean([metrics[eval(struct)]['f1'] for struct in metrics])
+        'accuracy': np.mean([metrics[struct]['accuracy'] for struct in metrics]),
+        'precision': np.mean([metrics[struct]['precision'] for struct in metrics]),
+        'recall': np.mean([metrics[struct]['recall'] for struct in metrics]),
+        'f1': np.mean([metrics[struct]['f1'] for struct in metrics])
     }
 
     metrics['weighted'] = {
         'accuracy': np.average(
-            [metrics[eval(struct)]['accuracy'] for struct in metrics if struct != 'macro'],
-            weights=[struct_sizes[eval(struct)] for struct in metrics if struct != 'macro']
+            [metrics[struct]['accuracy'] for struct in metrics if struct != 'macro'],
+            weights=[struct_sizes[struct] for struct in metrics if struct != 'macro']
         ),
         'precision': np.average(
-            [metrics[eval(struct)]['precision'] for struct in metrics if struct != 'macro'],
-            weights=[struct_sizes[eval(struct)] for struct in metrics if struct != 'macro']
+            [metrics[struct]['precision'] for struct in metrics if struct != 'macro'],
+            weights=[struct_sizes[struct] for struct in metrics if struct != 'macro']
         ),
         'recall': np.average(
-            [metrics[eval(struct)]['recall'] for struct in metrics if struct != 'macro'],
-            weights=[struct_sizes[eval(struct)] for struct in metrics if struct != 'macro']
+            [metrics[struct]['recall'] for struct in metrics if struct != 'macro'],
+            weights=[struct_sizes[struct] for struct in metrics if struct != 'macro']
         ),
         'f1': np.average(
-            [metrics[eval(struct)]['f1'] for struct in metrics if struct != 'macro'],
-            weights=[struct_sizes[eval(struct)] for struct in metrics if struct != 'macro']
+            [metrics[struct]['f1'] for struct in metrics if struct != 'macro'],
+            weights=[struct_sizes[struct] for struct in metrics if struct != 'macro']
         )
     }
 
