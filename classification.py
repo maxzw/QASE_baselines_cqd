@@ -83,6 +83,7 @@ def find_best_threshold(
     pos_dists_mean = np.nanmean(pos_dists)
     
     pbounds = {'threshold': (np.quantile(pos_dists_mean, 0.2), np.quantile(pos_dists_mean, 0.8))}
+    logging.info("Using the following bounds: {}, mean: {}".format(pbounds['threshold'], pos_dists_mean))
 
     def objective(threshold):
         accuracy, precision, recall, f1 = get_class_metrics(distances, easy_answers, hard_answers, threshold)
@@ -104,7 +105,6 @@ def find_best_threshold(
 
     if (model_name is not None) and (dataset_name is not None) and (struct_str is not None) and (save_path is not None):
         # save current optimization metrics (2) if needed
-        plt.figure(2, figsize=(10,10))
         x = np.array([step['params']['threshold'] for step in optimizer.res])
         y = np.array([step['target'] for step in optimizer.res])
         x_order = np.argsort(x)
@@ -112,6 +112,7 @@ def find_best_threshold(
         y = y[x_order]
         r = np.array(recalls)[x_order]
         p = np.array(precisions)[x_order]
+        plt.figure(2, figsize=(10,10))
         plt.plot(x, y, '-', label="f1")
         plt.plot(x, r, '-', label="recall")
         plt.plot(x, p, '-', label="precision")
@@ -122,15 +123,15 @@ def find_best_threshold(
         plt.savefig(f"{save_path}/{model_name}_{dataset_name}_{struct_str}.png", facecolor='w', bbox_inches='tight')
         plt.clf()
 
-    if struct_str is not None:
-        # save figure to collective f1 plot (1) if needed
-        plt.figure(1)
-        x = np.array([step['params']['threshold'] for step in optimizer.res])
-        y = np.array([step['target'] for step in optimizer.res])
-        x_order = np.argsort(x)
-        x = x[x_order]
-        y = y[x_order]
-        plt.plot(x, y, 'x-', label=struct_str)
+    # if struct_str is not None:
+    #     # save figure to collective f1 plot (1) if needed
+    #     plt.figure(1)
+    #     x = np.array([step['params']['threshold'] for step in optimizer.res])
+    #     y = np.array([step['target'] for step in optimizer.res])
+    #     x_order = np.argsort(x)
+    #     x = x[x_order]
+    #     y = y[x_order]
+    #     plt.plot(x, y, 'x-', label=struct_str)
 
     best_threshold = optimizer.max['params']['threshold']
     best_accuracy, best_precision, best_recall, best_f1 = get_class_metrics(distances, easy_answers, hard_answers, best_threshold)
@@ -215,7 +216,7 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
         all_distances = model.gamma.cpu() - all_distances
 
     # Define plot
-    plt.figure(1, figsize=(10,10))
+    # plt.figure(1, figsize=(10,10))
 
     # find best threshold for each query structure
     for struct in set(all_query_stuctures):
@@ -251,16 +252,16 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
         }
 
     # Save figure
-    plt.figure(1)
-    if (model_name is not None) and (dataset_name is not None):
-        plt.title("Opt_{}_{}".format(model_name, dataset_name))
-    else:
-        plt.title("Optimization results")
-    plt.xlabel('Distance threshold')
-    plt.ylabel('f1-score')
-    plt.legend()
-    plt.savefig(args.save_path + "/threshold_search.png", facecolor='w', bbox_inches='tight')
-    plt.clf()
+    # plt.figure(1)
+    # if (model_name is not None) and (dataset_name is not None):
+    #     plt.title("Opt_{}_{}".format(model_name, dataset_name))
+    # else:
+    #     plt.title("Optimization results")
+    # plt.xlabel('Distance threshold')
+    # plt.ylabel('f1-score')
+    # plt.legend()
+    # plt.savefig(args.save_path + "/threshold_search.png", facecolor='w', bbox_inches='tight')
+    # plt.clf()
 
     return thresholds, metrics
 
@@ -348,7 +349,7 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
             str_distances.numpy(), 
             str_easy_answers_mask.bool().numpy(),
             str_hard_answers_mask.bool().numpy(),
-            thresholds[struct]
+            thresholds[eval(struct)]
         )
 
         # save threshold and metrics
@@ -368,20 +369,20 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
 
     metrics['weighted'] = {
         'accuracy': np.average(
-            [metrics[struct]['accuracy'] for struct in metrics if struct is not 'macro'],
-            weights=[struct_sizes[struct] for struct in metrics if struct is not 'macro']
+            [metrics[struct]['accuracy'] for struct in metrics if struct != 'macro'],
+            weights=[struct_sizes[struct] for struct in metrics if struct != 'macro']
         ),
         'precision': np.average(
-            [metrics[struct]['precision'] for struct in metrics if struct is not 'macro'],
-            weights=[struct_sizes[struct] for struct in metrics if struct is not 'macro']
+            [metrics[struct]['precision'] for struct in metrics if struct != 'macro'],
+            weights=[struct_sizes[struct] for struct in metrics if struct != 'macro']
         ),
         'recall': np.average(
-            [metrics[struct]['recall'] for struct in metrics if struct is not 'macro'],
-            weights=[struct_sizes[struct] for struct in metrics if struct is not 'macro']
+            [metrics[struct]['recall'] for struct in metrics if struct != 'macro'],
+            weights=[struct_sizes[struct] for struct in metrics if struct != 'macro']
         ),
         'f1': np.average(
-            [metrics[struct]['f1'] for struct in metrics if struct is not 'macro'],
-            weights=[struct_sizes[struct] for struct in metrics if struct is not 'macro']
+            [metrics[struct]['f1'] for struct in metrics if struct != 'macro'],
+            weights=[struct_sizes[struct] for struct in metrics if struct != 'macro']
         )
     }
 
