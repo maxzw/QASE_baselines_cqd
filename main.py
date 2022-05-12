@@ -313,7 +313,7 @@ def main(args):
                                     ))
         else:
             train_other_iterator = None
-    assert train_path_iterator is not None or train_other_iterator is not None, "no training data"
+    if args.do_train: assert train_path_iterator is not None or train_other_iterator is not None, "no training data"
     
     logging.info("Validation info:")
     if args.do_valid:
