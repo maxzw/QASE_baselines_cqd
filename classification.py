@@ -86,7 +86,7 @@ def find_best_threshold(
     pos_dists_std3 = np.nanstd(pos_dists) * 3
     
     if model_name == "GQE":
-        pbounds = {'threshold': (pos_dists_mean - pos_dists_std3, pos_dists_mean + pos_dists_std3)}
+        pbounds = {'threshold': (pos_dists_mean - pos_dists_std3, pos_dists_mean + pos_dists_std3)} # verified to be optimal
     else:
         pbounds = {'threshold': (pos_dists_mean - pos_dists_std3, pos_dists_mean + pos_dists_std3)}
     logging.info("Using the following bounds: {}".format(pbounds))
@@ -110,7 +110,7 @@ def find_best_threshold(
     )
 
     if (model_name is not None) and (dataset_name is not None) and (struct_str is not None) and (save_path is not None):
-        # save current optimization metrics (2) if needed
+        # create a new figure with a random hash
         x = np.array([step['params']['threshold'] for step in optimizer.res])
         y = np.array([step['target'] for step in optimizer.res])
         x_order = np.argsort(x)
@@ -118,7 +118,6 @@ def find_best_threshold(
         y = y[x_order]
         r = np.array(recalls)[x_order]
         p = np.array(precisions)[x_order]
-        plt.figure(2, figsize=(10,10))
         plt.plot(x, y, '-', label="f1")
         plt.plot(x, r, '-', label="recall")
         plt.plot(x, p, '-', label="precision")
@@ -212,8 +211,8 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
 
             if step % 10 == 0:
                 logging.info('Gathering predictions of batches... (%d/%d) ' % (step, total_steps))
-            if len(all_query_stuctures) > 5000: ############################################################ REMOVE THIS LINE
-                break
+            # if len(all_query_stuctures) > 5000: ############################################################ REMOVE THIS LINE
+                # break
             step += 1
 
     # IMPORTANT: reset to raw distances
@@ -245,7 +244,7 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
             str_easy_answers_mask.bool().numpy(),
             str_hard_answers_mask.bool().numpy(),
             struct_str=query_name_dict[eval(struct)],
-            num_steps=100,
+            num_steps=80,
             model_name=model_name,
             dataset_name=dataset_name,
             save_path=args.save_path
@@ -333,8 +332,8 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
 
             if step % 10 == 0:
                 logging.info('Gathering predictions of batches... (%d/%d)' % (step, total_steps))
-            if len(all_query_stuctures) > 5000: ############################################################ REMOVE THIS LINE
-                break
+            # if len(all_query_stuctures) > 5000: ############################################################ REMOVE THIS LINE
+            #     break
             step += 1
 
     # IMPORTANT: reset to raw distances
