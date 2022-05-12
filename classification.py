@@ -85,8 +85,8 @@ def find_best_threshold(
     if model_name == "CQD":
         pbounds = {'threshold': (np.quantile(pos_dists_mean, 0.2), np.quantile(pos_dists_mean, 0.8))}
     else:
-        pos_dists_std = np.nanstd(pos_dists) * 6
-        pbounds = {'threshold': (pos_dists_mean - pos_dists_std, pos_dists_mean + pos_dists_std)}
+        pos_dists_std = np.nanstd(pos_dists) * 3
+        pbounds = {'threshold': (pos_dists_mean - pos_dists_std, pos_dists_mean + 2 * pos_dists_std)}
 
     def objective(threshold):
         accuracy, precision, recall, f1 = get_class_metrics(distances, easy_answers, hard_answers, threshold)
