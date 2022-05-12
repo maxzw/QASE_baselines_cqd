@@ -237,7 +237,8 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
 
     # find best threshold for each query structure
     for struct in set(all_query_stuctures):
-        logging.info(f"Finding best threshold for structure: {struct} / {query_name_dict[eval(struct)]}")
+        struct_str = query_name_dict[eval(struct)]
+        logging.info(f"Finding best threshold for structure: {struct} / {struct_str}")
 
         # select data for current structure
         struct_idx = np.array(np.where(np.array(all_query_stuctures) == struct)[0])
@@ -250,7 +251,7 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
             str_distances.numpy(),
             str_easy_answers_mask.bool().numpy(),
             str_hard_answers_mask.bool().numpy(),
-            struct_str=query_name_dict[eval(struct)],
+            struct_str=struct_str,
             num_steps=80,
             model_name=model_name,
             dataset_name=dataset_name,
@@ -260,8 +261,8 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
         logging.info(f"Threshold: {threshold:.4f}, Accuracy: {accuracy:.3f}, Precision: {precision:.3f}, Recall: {recall:.3f}, F1: {f1:.3f}")
         
         # save threshold and metrics
-        thresholds[eval(struct)] = threshold
-        metrics[eval(struct)] = {
+        thresholds[struct_str] = threshold
+        metrics[struct_str] = {
             'accuracy': accuracy,
             'precision': precision,
             'recall': recall,
@@ -350,7 +351,8 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
     struct_sizes = {}
     # find best threshold for each query structure
     for struct in set(all_query_stuctures):
-        logging.info(f"Calculating metrics for structure: {struct}")
+        struct_str = query_name_dict[eval(struct)]
+        logging.info(f"Calculating metrics for structure: {struct} / {struct_str}")
 
         # select data for current structure
         struct_idx = torch.tensor(np.where(np.array(all_query_stuctures) == struct)[0])
@@ -359,18 +361,18 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
         str_hard_answers_mask = all_hard_answers_mask[struct_idx, :]
 
         # track size of current structure for weighted metrics
-        struct_sizes[eval(struct)] = len(struct_idx)
+        struct_sizes[struct_str] = len(struct_idx)
 
         # find best threshold and metrics
         accuracy, precision, recall, f1 = get_class_metrics(
             str_distances.numpy(), 
             str_easy_answers_mask.bool().numpy(),
             str_hard_answers_mask.bool().numpy(),
-            thresholds[eval(struct)]
+            thresholds[struct_str]
         )
 
         # save threshold and metrics
-        metrics[struct] = {
+        metrics[struct_str] = {
             'accuracy': accuracy,
             'precision': precision,
             'recall': recall,
