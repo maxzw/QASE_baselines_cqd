@@ -81,9 +81,13 @@ def find_best_threshold(
     pos_dists = np.where(easy_answers, distances, 0) # find thresholds based on valid easy answers
     pos_dists[pos_dists==0] = np.nan
     pos_dists_mean = np.nanmean(pos_dists)
+    pos_dists_std3 = np.nanstd(pos_dists) * 3
     
-    pbounds = {'threshold': (np.quantile(pos_dists_mean, 0.2), np.quantile(pos_dists_mean, 0.8))} # between recall 0.2 and 0.8
-    logging.info("Using the following bounds: {}, mean: {}".format(pbounds['threshold'], pos_dists_mean))
+    if model_name == "GQE":
+        pbounds = {'threshold': (pos_dists_mean - pos_dists_std3, pos_dists_mean + pos_dists_std3)}
+    else:
+        pbounds = {'threshold': (pos_dists_mean - pos_dists_std3, pos_dists_mean + pos_dists_std3)}
+    logging.info("Using the following bounds: {}".format(pbounds))
 
     def objective(threshold):
         accuracy, precision, recall, f1 = get_class_metrics(distances, easy_answers, hard_answers, threshold)
@@ -159,7 +163,6 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
 
     step = 0
     total_steps = len(test_dataloader)
-    early_stop = total_steps // 50
 
     # track queries, distances and answers
     all_query_stuctures = []
