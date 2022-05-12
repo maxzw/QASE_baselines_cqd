@@ -82,7 +82,7 @@ def find_best_threshold(
     pos_dists[pos_dists==0] = np.nan
     pos_dists_mean = np.nanmean(pos_dists)
     
-    pbounds = {'threshold': (np.quantile(pos_dists_mean, 0.2), np.quantile(pos_dists_mean, 0.8))}
+    pbounds = {'threshold': (np.quantile(pos_dists_mean, 0.2), np.quantile(pos_dists_mean, 0.8))} # between recall 0.2 and 0.8
     logging.info("Using the following bounds: {}, mean: {}".format(pbounds['threshold'], pos_dists_mean))
 
     def objective(threshold):
@@ -207,7 +207,7 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
 
             if step % 10 == 0:
                 logging.info('Gathering predictions of batches... (%d/%d) ' % (step, total_steps))
-            if step > early_stop:
+            if len(all_query_stuctures) > 5000:
                 break
             step += 1
 
@@ -275,7 +275,6 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
 
     step = 0
     total_steps = len(test_dataloader)
-    early_stop = total_steps // 50
 
     # track queries, distances and answers
     all_query_stuctures = []
@@ -323,7 +322,7 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
 
             if step % 10 == 0:
                 logging.info('Gathering predictions of batches... (%d/%d)' % (step, total_steps))
-            if step == early_stop:
+            if len(all_query_stuctures) > 5000:
                 break
             step += 1
 
