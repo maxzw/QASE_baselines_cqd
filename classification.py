@@ -81,12 +81,11 @@ def find_best_threshold(
     pos_dists = np.where(easy_answers, distances, 0) # find thresholds based on valid easy answers
     pos_dists[pos_dists==0] = np.nan
     pos_dists_mean = np.nanmean(pos_dists)
-    pos_dists_std = np.nanstd(pos_dists) * 3
-
-    logging.info(f"Mean distance: {pos_dists_mean}, std: {pos_dists_std}, min: {np.nanmin(pos_dists)}, max: {np.nanmax(pos_dists)}")
+    
     if model_name == "CQD":
-        pbounds = {'threshold': (0.0, 1.0)}
+        pbounds = {'threshold': (np.quantile(pos_dists_mean, 0.2), np.quantile(pos_dists_mean, 0.8))}
     else:
+        pos_dists_std = np.nanstd(pos_dists) * 3
         pbounds = {'threshold': (pos_dists_mean - pos_dists_std, pos_dists_mean + pos_dists_std)}
 
     def objective(threshold):
