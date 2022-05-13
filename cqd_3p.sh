@@ -25,8 +25,7 @@ source activate thesis
 
 # Run your code
 srun python main.py --do_valid --do_test -n 1 -b 1000 -d 1000 --cpu_num 0 --geo cqd --valid_steps 20 \
---tasks 3p --print_on_screen --test_batch_size 1 --cqd discrete --cqd-t-norm prod \
---cqd-sigmoid --cqd-k 4 --cuda ${@:1}
+--tasks 3p --print_on_screen --test_batch_size 1 --cqd discrete --cqd-t-norm prod --cqd-k 4 --cuda ${@:1}
 
 # --data_path data/...
 # --checkpoint_path ...
