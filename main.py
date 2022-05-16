@@ -531,9 +531,9 @@ def main(args):
         logging.info(f"Val thresholds: {thresholds}")
         logging.info(f"Val metrics: {metrics}")
 
-        # logging.info('Using found thresholds on test set...')
-        # metrics = evaluate_with_thresholds(model, test_easy_answers, test_hard_answers, args, test_dataloader, thresholds)
-        # logging.info(f"Test metrics: {metrics}")
+        logging.info('Using found thresholds on test set...')
+        metrics = evaluate_with_thresholds(model, test_easy_answers, test_hard_answers, args, test_dataloader, thresholds)
+        logging.info(f"Test metrics: {metrics}")
         # --------- Added for thesis baseline ----------
 
     logging.info("Training finished!!")
