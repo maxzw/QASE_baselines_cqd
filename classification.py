@@ -81,10 +81,13 @@ def find_best_threshold(
     precisions = []
     recalls = []
 
-    pos_dists = np.where(easy_answers, distances, 0) # find thresholds based on valid easy answers
+    pos_dists = np.where((easy_answers | hard_answers), distances, np.nan) # find thresholds based on valid answers
     pos_dists[pos_dists==0] = np.nan
     pos_dists_mean = np.nanmean(pos_dists)
     pos_dists_std = np.nanstd(pos_dists)
+
+    logging.info(f'Positive distances mean: {pos_dists_mean}')
+    logging.info(f'Positive distances std: {pos_dists_std}')
     
     if model_name == "GQE":
         pbounds = {'threshold': (pos_dists_mean - pos_dists_std*5, pos_dists_mean + pos_dists_std*5)} # works!
@@ -221,8 +224,8 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
 
             if step % 10 == 0:
                 logging.info('Gathering predictions of batches... (%d/%d) ' % (step, total_steps))
-            # if len(all_query_stuctures) > 5000: ############################################################ REMOVE THIS LINE
-            #     break
+            if len(all_query_stuctures) > 2000: ############################################################ REMOVE THIS LINE
+                break
             step += 1
 
     # IMPORTANT: reset to raw distances
@@ -349,8 +352,8 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
 
             if step % 10 == 0:
                 logging.info('Gathering predictions of batches... (%d/%d)' % (step, total_steps))
-            # if len(all_query_stuctures) > 5000: ############################################################ REMOVE THIS LINE
-            #     break
+            if len(all_query_stuctures) > 2000: ############################################################ REMOVE THIS LINE
+                break
             step += 1
 
     # IMPORTANT: reset to raw distances
