@@ -1,6 +1,7 @@
 """Custom evaluation functions used for binary classification."""
 from pathlib import Path
 import logging
+import pickle
 from pickle import HIGHEST_PROTOCOL
 from typing import Tuple
 from collections import defaultdict
@@ -133,6 +134,8 @@ def find_best_threshold(
         plt.ylabel("Score")
         plt.title(f"{model_name}_{dataset_name}_{struct_str}")
         plt.savefig(f"{save_path}/{model_name}_{dataset_name}_{struct_str}.png", facecolor='w', bbox_inches='tight')
+        temp_figure = plt.gcf()
+        pickle.dump(temp_figure, open(f"{save_path}/{model_name}_{dataset_name}_{struct_str}.pkl", "wb"))
         plt.clf()
 
     if struct_str is not None:
@@ -234,6 +237,10 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
     torch.save(all_easy_answers_mask, f"{args.save_path}/opt/easy_answers_mask.pt", pickle_protocol=HIGHEST_PROTOCOL)
     torch.save(all_hard_answers_mask, f"{args.save_path}/opt/hard_answers_mask.pt", pickle_protocol=HIGHEST_PROTOCOL)
     torch.save(all_query_stuctures, f"{args.save_path}/opt/query_structures.pt", pickle_protocol=HIGHEST_PROTOCOL)
+    # all_distances = torch.load(f"{args.save_path}/opt/distances.pt")
+    # all_easy_answers_mask = torch.load(f"{args.save_path}/opt/easy_answers_mask.pt")
+    # all_hard_answers_mask = torch.load(f"{args.save_path}/opt/hard_answers_mask.pt")
+    # all_query_stuctures = torch.load(f"{args.save_path}/opt/query_structures.pt")
 
     # find best threshold for each query structure
     for struct in set(all_query_stuctures):
@@ -280,6 +287,8 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
     plt.ylabel('f1-score')
     plt.legend()
     plt.savefig(args.save_path + "/threshold_search.png", facecolor='w', bbox_inches='tight')
+    opt_figure = plt.gcf()
+    pickle.dump(opt_figure, open(args.save_path + "/threshold_search.pkl", "wb"))
     plt.clf()
 
     return thresholds, metrics
