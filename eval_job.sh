@@ -3,6 +3,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --gpus=1
+#SBATCH --mem=100G
 #SBATCH --partition=gpu_shared
 #SBATCH --time=100:00:00
 #SBATCH --mail-type=ALL
