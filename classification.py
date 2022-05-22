@@ -1,4 +1,5 @@
 """Custom evaluation functions used for binary classification."""
+import time
 from pathlib import Path
 import logging
 import pickle
@@ -186,6 +187,8 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
     
     requires_grad = isinstance(model, CQD) and model.method == 'continuous'
 
+    start_time = time.time()
+
     with torch.set_grad_enabled(requires_grad):
         for negative_sample, queries, queries_unflatten, query_structures in tqdm(test_dataloader, disable=not args.print_on_screen):
             
@@ -226,6 +229,9 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
                 logging.info('Gathering predictions of batches... (%d/%d) ' % (step, total_steps))
             # if len(all_query_stuctures) > 2000: ############################################################ REMOVE THIS LINE
             #     break
+            if (time.time() - start_time) > 274000: # ~76 hours, need 24 hours for optimization
+                logging.info('Time limit reached. Terminating...')
+                break
             step += 1
 
     # IMPORTANT: reset to raw distances
@@ -314,6 +320,8 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
 
     requires_grad = isinstance(model, CQD) and model.method == 'continuous'
 
+    start_time = time.time()
+
     with torch.set_grad_enabled(requires_grad):
         for negative_sample, queries, queries_unflatten, query_structures in tqdm(test_dataloader, disable=not args.print_on_screen):
             
@@ -354,6 +362,9 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
                 logging.info('Gathering predictions of batches... (%d/%d)' % (step, total_steps))
             # if len(all_query_stuctures) > 2000: ############################################################ REMOVE THIS LINE
             #     break
+            if (time.time() - start_time) > 330000: # ~92 hours, need 7/8 hours for finding metrics
+                logging.info('Time limit reached. Terminating...')
+                break
             step += 1
 
     # IMPORTANT: reset to raw distances
