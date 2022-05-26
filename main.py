@@ -440,7 +440,7 @@ def main(args):
     
     if args.do_train:
         training_logs = []
-        # #Training Loop
+        # Training Loop
         for step in range(init_step, args.max_steps):
             if step == 2*args.max_steps//3:
                 args.valid_steps *= 4
@@ -519,7 +519,7 @@ def main(args):
             save_model(model, optimizer, save_variable_list, args)
         
     try:
-        print (step)
+        print(step)
     except:
         step = 0
 
@@ -531,26 +531,25 @@ def main(args):
         
         # We only need to do optim on AIFB currently
         dataset_name = str(args.data_path).split("/")[-1].split('-')[0]
-        if dataset_name == 'AIFB':
-            logging.info(f'Finding thresholds on validation dataset {dataset_name}...')
-            thresholds, metrics = find_val_thresholds(model, valid_easy_answers, valid_hard_answers, args, valid_dataloader)
-            logging.info(f"Val thresholds: {thresholds}")
-            logging.info(f"Val metrics: {metrics}")
+        # logging.info(f'Finding thresholds on validation dataset {dataset_name}...')
+        # thresholds, metrics = find_val_thresholds(model, valid_easy_answers, valid_hard_answers, args, valid_dataloader)
+        # logging.info(f"Val thresholds: {thresholds}")
+        # logging.info(f"Val metrics: {metrics}")
 
-        # Otherwise just get known thresholds
+        # Hardcoded checkpoint for all datasets and models
         if args.geo == 'vec':
             if dataset_name == 'AIFB':
-                pass
+                thresholds = {'3p': 25.373890116697012, '3i': 21.996944085425866, '1p': 24.14039124839991, 'ip': 23.57613498338414, '2i': 22.350877295736925, '2p': 24.136620346724577, 'pi': 22.556918102052588}
             if dataset_name == 'MUTAG':
                 thresholds = {'2i': 24.125425986091322, 'pi': 26.216209220260367, '1p': 33.00828099432805, '3i': 27.234509708861133, 'ip': 30.955308550826214, '3p': 31.84406100474755, '2p': 32.825955881728554}
         if args.geo == 'box':
             if dataset_name == 'AIFB':
-                pass
+                thresholds = {'ip': 25.393290734281017, 'pi': 26.664475013924896, '3p': 24.48853943361403, '3i': 25.791093684965517, '1p': 30.205017156904216, '2i': 28.00021506905052, '2p': 26.05654974563444}
             if dataset_name == 'MUTAG':
                 thresholds = {'2p': 32.16003745795001, 'pi': 29.95344713309345, '2i': 22.80687190568281, '1p': 34.548209354859516, '3i': 27.173006174128023, 'ip': 28.231804473947246, '3p': 26.61886985086311}
         if args.geo == 'beta':
             if dataset_name == 'AIFB':
-                pass
+                thresholds = {'3i': 65.67291027873483, 'pi': 65.12201609464074, '3p': 59.66706951762987, '1p': 68.39395985969107, '2i': 66.01347625989916, 'ip': 62.667977648555436, '2p': 67.37979800330028}
             if dataset_name == 'MUTAG':
                 thresholds = {'2p': 66.13584963088005, '3i': 70.17027176683192, 'pi': 65.73327444413322, '2i': 69.42007645141062, '3p': 63.12666938402364, 'ip': 60.042783233382764, '1p': 80.81864226000447}
 

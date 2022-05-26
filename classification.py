@@ -229,7 +229,7 @@ def find_val_thresholds(model, easy_answers, hard_answers, args, test_dataloader
                 logging.info('Gathering predictions of batches... (%d/%d) ' % (step, total_steps))
             # if len(all_query_stuctures) > 2000: ############################################################ REMOVE THIS LINE
             #     break
-            if (time.time() - start_time) > 274000: # ~76 hours, need 24 hours for optimization
+            if (time.time() - start_time) > 274000: # ~76 hours = 3 days 4 hours, need 24 hours for optimization
                 logging.info('Time limit reached. Terminating...')
                 break
             step += 1
@@ -362,7 +362,7 @@ def evaluate_with_thresholds(model, easy_answers, hard_answers, args, test_datal
                 logging.info('Gathering predictions of batches... (%d/%d)' % (step, total_steps))
             # if len(all_query_stuctures) > 2000: ############################################################ REMOVE THIS LINE
             #     break
-            if (time.time() - start_time) > 330000: # ~92 hours, need 7/8 hours for finding metrics
+            if (time.time() - start_time) > 330000: # ~92 hours, 3 days 20 hours, need 7/8 hours for finding metrics
                 logging.info('Time limit reached. Terminating...')
                 break
             step += 1
